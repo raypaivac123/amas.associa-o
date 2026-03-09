@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMAS - Associação de São Sebastião</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Configuração do Tailwind para usar a paleta obrigatória -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'amas-blue-main': '#1B1F55',
+                        'amas-blue-mid': '#4D53A0',
+                        'amas-blue-high': '#131B80',
+                        'amas-gray-blue': '#4C4F75',
+                        'amas-gray-light': '#6C6E84',
+                        'amas-gray-dark': '#2A2A33',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CSS Customizado (Transições e Scrollbar) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Ocultar views que não estão ativas */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toast notification */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            min-width: 250px;
+            margin-top: 10px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease forwards;
+        }
+        .toast.success { background-color: #10B981; }
+        .toast.error { background-color: #EF4444; }
+        .toast.info { background-color: #3B82F6; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-amas-gray-dark dark:text-gray-200 font-sans min-h-screen flex flex-col">
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-container"></div>
+
+    <!-- NAVBAR COMUM -->
+    <nav class="bg-amas-blue-main text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center cursor-pointer" onclick="app.navigate('home')">
+                    <i class="fa-solid fa-hands-holding-circle text-2xl mr-2"></i>
+                    <span class="font-bold text-xl tracking-wider">AMAS</span>
+                </div>
+                
+                <!-- Menu Desktop -->
+                <div class="hidden md:flex items-center space-x-6" id="nav-links">
+                    <a href="#" onclick="app.navigate('home')" class="hover:text-blue-200 transition">Início</a>
+                    <a href="#sobre" class="hover:text-blue-200 transition nav-public">Sobre</a>
+                    <a href="#beneficios" class="hover:text-blue-200 transition nav-public">Benefícios</a>
+                    <button onclick="app.toggleTheme()" class="p-2 rounded-full hover:bg-amas-blue-mid transition" title="Mudar Tema">
+                        <i class="fa-solid fa-moon dark:hidden"></i>
+                        <i class="fa-solid fa-sun hidden dark:block"></i>
+                    </button>
+                    <button id="btn-login-nav" onclick="app.openLoginModal()" class="bg-amas-blue-high hover:bg-blue-800 text-white px-4 py-2 rounded-lg font-medium transition shadow-md">
+                        Login
+                    </button>
+                    <button id="btn-logout-nav" onclick="app.logout()" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-md">
+                        Sair
+                    </button>
+                </div>
+
+                <!-- Menu Mobile (Hamburguer) -->
+                <div class="md:hidden flex items-center">
+                    <button onclick="app.toggleTheme()" class="p-2 mr-2 rounded-full">
+                        <i class="fa-solid fa-moon dark:hidden"></i>
+                        <i class="fa-solid fa-sun hidden dark:block"></i>
+                    </button>
+                    <button id="btn-login-mobile" onclick="app.openLoginModal()" class="mr-4 text-sm font-bold">Login</button>
+                    <button id="btn-logout-mobile" onclick="app.logout()" class="hidden mr-4 text-sm font-bold text-red-400">Sair</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTAINER PRINCIPAL DE VIEWS -->
+    <main class="flex-grow">
+
+        <!-- ==================== PARTE 1: SITE INSTITUCIONAL (HOME) ==================== -->
+        <section id="view-home" class="view-section active">
+            <!-- Banner Hero -->
+            <div class="relative bg-amas-blue-main overflow-hidden">
+                <div class="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1449844908441-8829872d2607?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center"></div>
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-24 lg:py-32 flex flex-col items-center text-center">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 drop-shadow-lg">
+                        Unindo Forças por São Sebastião
+                    </h1>
+                    <p class="text-xl md:text-2xl text-blue-100 mb-10 max-w-3xl">
+                        A Associação AMAS trabalha para servir, desenvolver e fortalecer nossa comunidade, comércio local e qualidade de vida.
+                    </p>
+                    <button onclick="document.getElementById('form-associar').scrollIntoView({behavior: 'smooth'})" class="bg-white text-amas-blue-main hover:bg-gray-100 font-bold text-lg px-8 py-4 rounded-full shadow-xl transition transform hover:scale-105">
+                        Quero me tornar um associado
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sobre a AMAS -->
+            <div id="sobre" class="py-16 bg-white dark:bg-amas-gray-dark transition-colors">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-bold text-amas-blue-main dark:text-blue-300">Sobre a AMAS</h2>
+                        <div class="w-24 h-1 bg-amas-blue-high mx-auto mt-4 rounded"></div>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div class="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-md border-t-4 border-amas-blue-mid">
+                            <i class="fa-solid fa-bullseye text-4xl text-amas-blue-mid mb-4"></i>
+                            <h3 class="text-xl font-bold mb-3 dark:text-white">Nossa Missão</h3>
+                            <p class="text-amas-gray-light dark:text-gray-400">Promover o desenvolvimento social e econômico sustentável da cidade de São Sebastião, apoiando moradores e empresários.</p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-md border-t-4 border-amas-blue-mid">
+                            <i class="fa-solid fa-eye text-4xl text-amas-blue-mid mb-4"></i>
+                            <h3 class="text-xl font-bold mb-3 dark:text-white">Nossa Visão</h3>
+                            <p class="text-amas-gray-light dark:text-gray-400">Ser a principal força de transformação e integração comunitária de nossa cidade até 2030.</p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-md border-t-4 border-amas-blue-mid">
+                            <i class="fa-solid fa-heart text-4xl text-amas-blue-mid mb-4"></i>
+                            <h3 class="text-xl font-bold mb-3 dark:text-white">Nossos Valores</h3>
+                            <p class="text-amas-gray-light dark:text-gray-400">Transparência, união, ética, valorização do comércio local e amor por São Sebastião.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefícios -->
+            <div id="beneficios" class="py-16 bg-gray-100 dark:bg-gray-900 transition-colors">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col md:flex-row items-center gap-12">
+                        <div class="md:w-1/2">
+                            <img src="c:\Users\matheus58203616\Documents\Captura de tela 2026-03-09 103643.png" alt="Comunidade Unida" class="rounded-2xl shadow-2xl">
+                        </div>
+                        <div class="md:w-1/2">
+                            <h2 class="text-3xl font-bold text-amas-blue-main dark:text-blue-300 mb-6">Por que se associar?</h2>
+                            <ul class="space-y-4">
+                                <li class="flex items-start">
+                                    <i class="fa-solid fa-check-circle text-green-500 mt-1 mr-3 text-xl"></i>
+                                    <div>
+                                        <h4 class="font-bold dark:text-white">Descontos no Comércio Local</h4>
+                                        <p class="text-sm text-amas-gray-light dark:text-gray-400">Empresas parceiras oferecem benefícios exclusivos para associados regulares.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa-solid fa-check-circle text-green-500 mt-1 mr-3 text-xl"></i>
+                                    <div>
+                                        <h4 class="font-bold dark:text-white">Participação em Projetos Sociais</h4>
+                                        <p class="text-sm text-amas-gray-light dark:text-gray-400">Voz ativa nas decisões e projetos que moldam nossa cidade.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa-solid fa-check-circle text-green-500 mt-1 mr-3 text-xl"></i>
+                                    <div>
+                                        <h4 class="font-bold dark:text-white">Fortalecimento da Comunidade</h4>
+                                        <p class="text-sm text-amas-gray-light dark:text-gray-400">Sua contribuição ajuda a financiar melhorias para todos.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulário de Associação -->
+            <div id="form-associar" class="py-16 bg-white dark:bg-amas-gray-dark transition-colors">
+                <div class="max-w-3xl mx-auto px-4">
+                    <div class="bg-gray-50 dark:bg-gray-800 p-8 md:p-10 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+                        <h2 class="text-3xl font-bold text-center text-amas-blue-main dark:text-blue-300 mb-8">Solicite sua Associação</h2>
+                        <form id="join-form" onsubmit="app.submitJoinRequest(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Nome Completo *</label>
+                                    <input type="text" id="join-nome" required class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">CPF *</label>
+                                    <input type="text" id="join-cpf" required placeholder="000.000.000-00" oninput="app.maskCPF(this)" maxlength="14" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Data de Nascimento *</label>
+                                    <input type="date" id="join-data" required class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Telefone *</label>
+                                    <input type="text" id="join-telefone" required placeholder="(00) 00000-0000" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Email *</label>
+                                    <input type="email" id="join-email" required class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Endereço (São Sebastião) *</label>
+                                    <input type="text" id="join-endereco" required class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Profissão</label>
+                                    <input type="text" id="join-profissao" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Motivo para se associar *</label>
+                                    <textarea id="join-motivo" required rows="3" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none"></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="mt-8 w-full bg-amas-blue-mid hover:bg-amas-blue-high text-white font-bold py-4 rounded-lg shadow-lg transition">
+                                Enviar Solicitação
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== MODAL DE LOGIN ==================== -->
+        <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden">
+            <div class="bg-white dark:bg-amas-gray-dark w-full max-w-md p-8 rounded-2xl shadow-2xl relative">
+                <button onclick="app.closeLoginModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white text-xl">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+                <div class="text-center mb-6">
+                    <i class="fa-solid fa-lock text-3xl text-amas-blue-mid mb-2"></i>
+                    <h2 class="text-2xl font-bold dark:text-white">Acesso ao Sistema</h2>
+                </div>
+                
+                <div class="mb-6 flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                    <button onclick="app.setLoginRole('admin')" id="tab-login-admin" class="flex-1 py-2 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-amas-blue-main dark:text-white transition">Admin</button>
+                    <button onclick="app.setLoginRole('associado')" id="tab-login-associado" class="flex-1 py-2 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-amas-blue-main transition">Associado</button>
+                    <button onclick="app.setLoginRole('empresario')" id="tab-login-empresario" class="flex-1 py-2 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-amas-blue-main transition">Empresário</button>
+                </div>
+
+                <form id="login-form" onsubmit="app.doLogin(event)">
+                    <input type="hidden" id="login-role" value="admin">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300" id="label-login-user">Usuário / CPF</label>
+                        <input type="text" id="login-user" required class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 outline-none">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Senha</label>
+                        <input type="password" id="login-pass" required class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-amas-blue-main hover:bg-amas-blue-high text-white font-bold py-3 rounded-lg shadow transition">
+                        Entrar
+                    </button>
+                </form>
+
+                <div class="mt-4 text-xs text-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                    <p class="font-bold mb-1">Credenciais de Teste:</p>
+                    <p>Admin: <b>admin</b> / <b>admin123</b></p>
+                    <p>Associado: <b>111.111.111-11</b> / <b>senha123</b></p>
+                    <p>Empresa: <b>222.222.222-22</b> / <b>empresa123</b></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PARTE 2: PAINEL ADMINISTRADOR ==================== -->
+        <section id="view-admin" class="view-section py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-amas-blue-main dark:text-blue-300">Painel do Administrador</h2>
+                <span class="bg-amas-blue-mid text-white px-3 py-1 rounded-full text-sm font-bold">Gestão AMAS</span>
+            </div>
+
+            <!-- Cards Resumo -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-blue-500">
+                    <div class="text-gray-500 dark:text-gray-400 text-sm font-bold">Total Associados</div>
+                    <div class="text-3xl font-bold dark:text-white mt-2" id="admin-total-assoc">0</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-green-500">
+                    <div class="text-gray-500 dark:text-gray-400 text-sm font-bold">Regulares</div>
+                    <div class="text-3xl font-bold dark:text-white mt-2 text-green-600" id="admin-regulares">0</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-red-500">
+                    <div class="text-gray-500 dark:text-gray-400 text-sm font-bold">Inadimplentes</div>
+                    <div class="text-3xl font-bold dark:text-white mt-2 text-red-600" id="admin-inadimplentes">0</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border-l-4 border-yellow-500">
+                    <div class="text-gray-500 dark:text-gray-400 text-sm font-bold">Validações Pendentes</div>
+                    <div class="text-3xl font-bold dark:text-white mt-2 text-yellow-600" id="admin-pendentes">0</div>
+                </div>
+            </div>
+
+            <!-- Gráficos e Aprovações -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <!-- Gráfico -->
+                <div class="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-4 dark:text-white">Situação dos Associados</h3>
+                    <div class="relative h-64 w-full flex justify-center">
+                        <canvas id="chartAssociados"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Validação de Contribuições -->
+                <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex flex-col">
+                    <h3 class="text-xl font-bold mb-4 dark:text-white">Análise de Contribuições (Mês Atual)</h3>
+                    <div class="overflow-y-auto flex-grow max-h-64">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b dark:border-gray-700 text-gray-600 dark:text-gray-400">
+                                    <th class="py-2">Associado</th>
+                                    <th class="py-2">Valor</th>
+                                    <th class="py-2">Comprovante</th>
+                                    <th class="py-2">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-aprovacoes">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gerenciamento de Associados -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold dark:text-white">Gerenciar Associados</h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="admin-search-cpf" placeholder="Buscar por CPF..." oninput="app.maskCPF(this)" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600 outline-none">
+                        <button onclick="app.filterAdminUsers()" class="bg-amas-gray-blue text-white px-4 rounded hover:bg-amas-gray-light"><i class="fa-solid fa-search"></i></button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                <th class="p-3 rounded-tl-lg">Nome</th>
+                                <th class="p-3">CPF</th>
+                                <th class="p-3">Matrícula</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3 rounded-tr-lg">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-admin-users" class="dark:text-gray-300">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PARTE 3: PAINEL DO ASSOCIADO ==================== -->
+        <section id="view-associado" class="view-section py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-amas-blue-main dark:text-blue-300">Área do Associado</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Bem-vindo(a), <span id="assoc-nome-display" class="font-bold"></span></p>
+                </div>
+                <div id="assoc-status-badge" class="px-4 py-2 rounded-full font-bold text-white bg-gray-500 shadow-md">
+                    Status: Desconhecido
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Perfil -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                    <div class="text-center mb-6">
+                        <div class="w-24 h-24 bg-amas-blue-mid rounded-full mx-auto flex items-center justify-center text-white text-3xl font-bold mb-3 shadow-inner">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <h3 class="font-bold text-lg dark:text-white" id="assoc-perfil-nome">-</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Matrícula: <span id="assoc-perfil-mat">-</span></p>
+                    </div>
+                    <div class="space-y-3 text-sm dark:text-gray-300">
+                        <p><strong>CPF:</strong> <span id="assoc-perfil-cpf">-</span></p>
+                        <p><strong>Email:</strong> <span id="assoc-perfil-email">-</span></p>
+                        <p><strong>Entrada:</strong> <span id="assoc-perfil-data">-</span></p>
+                    </div>
+                </div>
+
+                <!-- Envio de Contribuição -->
+                <div class="md:col-span-2 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-md flex flex-col justify-center border-t-4 border-amas-blue-mid">
+                    <h3 class="text-2xl font-bold mb-6 text-amas-blue-main dark:text-blue-300">Nova Contribuição Mensal</h3>
+                    <form id="contrib-form" onsubmit="app.submitContribution(event)">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Mês Referência</label>
+                                <input type="month" id="contrib-mes" required class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Valor (R$)</label>
+                                <input type="number" step="0.01" id="contrib-valor" required placeholder="50.00" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none">
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-1 dark:text-gray-300">Anexar Comprovante (Imagem/PDF)</label>
+                            <input type="file" id="contrib-arquivo" accept=".pdf,.jpg,.jpeg,.png" required class="w-full p-2 border border-dashed border-gray-400 dark:border-gray-500 rounded-lg dark:text-gray-300">
+                            <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-info-circle"></i> Apenas simulação no front-end.</p>
+                        </div>
+                        <button type="submit" class="w-full bg-amas-blue-mid hover:bg-amas-blue-high text-white font-bold py-3 rounded-lg shadow-lg transition">
+                            Enviar Comprovante
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Histórico -->
+            <div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md overflow-x-auto">
+                <h3 class="text-xl font-bold mb-4 dark:text-white">Histórico de Contribuições</h3>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                            <th class="p-3 rounded-tl-lg">Mês/Ano</th>
+                            <th class="p-3">Valor</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 rounded-tr-lg">Mensagem (Admin)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-assoc-history" class="dark:text-gray-300">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==================== PARTE 4: PAINEL DO EMPRESÁRIO ==================== -->
+        <section id="view-empresario" class="view-section py-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+            <div class="text-center mb-10">
+                <i class="fa-solid fa-store text-5xl text-amas-blue-mid mb-4"></i>
+                <h2 class="text-3xl font-bold text-amas-blue-main dark:text-blue-300">Consulta de Associados</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2 max-w-xl mx-auto">Área restrita para empresas parceiras. Verifique a situação do associado para liberar benefícios e descontos exclusivos.</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-2xl mx-auto border-t-8 border-amas-blue-main">
+                <h3 class="text-xl font-bold mb-6 dark:text-white text-center">Consultar Situação</h3>
+                <div class="flex flex-col sm:flex-row gap-4 mb-8 relative">
+                    <input type="text" id="emp-search-cpf" placeholder="Digite o CPF do associado..." oninput="app.maskCPF(this)" maxlength="14" class="flex-grow p-4 text-lg rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-amas-blue-mid outline-none font-bold tracking-widest text-center sm:text-left">
+                    <button onclick="app.consultarAssociado()" class="bg-amas-blue-mid hover:bg-amas-blue-high text-white font-bold py-4 px-8 rounded-lg shadow-lg transition text-lg flex items-center justify-center">
+                        <i class="fa-solid fa-search mr-2"></i> Consultar
+                    </button>
+                </div>
+
+                <!-- Resultado da Consulta -->
+                <div id="emp-resultado" class="hidden p-6 rounded-xl border-2 transition-all duration-300">
+                    <div class="flex items-center mb-4">
+                        <i id="emp-icon" class="text-4xl mr-4"></i>
+                        <div>
+                            <h4 class="text-2xl font-bold dark:text-white" id="emp-res-nome">Nome do Associado</h4>
+                            <p class="text-gray-600 dark:text-gray-400 font-mono text-sm" id="emp-res-cpf">000.000.000-00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 my-6">
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg text-center shadow-inner">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider mb-1">Status Atual</p>
+                            <p class="text-lg font-bold" id="emp-res-status">-</p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg text-center shadow-inner">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider mb-1">Benefício Liberado</p>
+                            <p class="text-lg font-bold" id="emp-res-liberado">-</p>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-center text-gray-500 dark:text-gray-500 mt-4 border-t dark:border-gray-700 pt-4">
+                        Consulta realizada em: <span id="emp-res-data" class="font-bold"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Primeira Senha (Associado) -->
+    <div id="first-login-modal" class="fixed inset-0 bg-black bg-opacity-70 z-[70] flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center">
+            <i class="fa-solid fa-shield-halved text-4xl text-yellow-500 mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2 dark:text-white">Atenção!</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-6 text-sm">Este é seu primeiro acesso. Por questões de segurança, você precisa alterar sua senha provisória.</p>
+            
+            <form onsubmit="app.changeFirstPassword(event)" class="text-left">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Nova Senha</label>
+                    <input type="password" id="new-pass-1" required minlength="6" class="w-full p-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 outline-none">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Confirmar Nova Senha</label>
+                    <input type="password" id="new-pass-2" required minlength="6" class="w-full p-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 outline-none">
+                </div>
+                <button type="submit" class="w-full bg-amas-blue-mid hover:bg-amas-blue-high text-white font-bold py-3 rounded-lg shadow transition">
+                    Atualizar Senha
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Mensagem de Revisão (Admin) -->
+    <div id="modal-revisao" class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-md p-6 rounded-xl shadow-2xl relative">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Solicitar Revisão</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Informe ao associado o motivo de não aprovar o comprovante.</p>
+            <input type="hidden" id="rev-contrib-id">
+            <textarea id="rev-mensagem" rows="3" placeholder="Ex: O comprovante está ilegível. Favor reenviar." class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 mb-4 outline-none"></textarea>
+            <div class="flex justify-end gap-2">
+                <button onclick="document.getElementById('modal-revisao').classList.add('hidden')" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded">Cancelar</button>
+                <button onclick="app.confirmRevisao()" class="px-4 py-2 bg-yellow-500 text-white font-bold rounded shadow hover:bg-yellow-600">Enviar Mensagem</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-amas-gray-dark text-gray-300 py-8 border-t border-gray-700 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="mb-4">
+                <i class="fa-solid fa-hands-holding-circle text-3xl text-amas-gray-light"></i>
+            </div>
+            <p class="font-bold text-lg mb-2 text-white">Associação AMAS - São Sebastião</p>
+            <p class="text-sm text-amas-gray-light mb-6">Fortalecendo nossa cidade, unindo nossa comunidade.</p>
+            <p class="text-xs">&copy; 2026 Associação AMAS. Projeto Prático - Desenvolvimento Web.</p>
+        </div>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        // Lógica Principal da Aplicação encapsulada
+        const app = {
+            currentUser: null,
+            chartInstance: null,
+
+            // Dados Iniciais (Simulação de Banco de Dados local)
+            seedData: function() {
+                if(!localStorage.getItem('amas_users')) {
+                    const defaultUsers = [
+                        { id: 1, name: 'Administrador Geral', cpf: 'admin', password: 'admin123', role: 'admin', status: 'Ativo' },
+                        { id: 2, name: 'João da Silva', cpf: '111.111.111-11', password: 'senha123', role: 'associado', status: 'Regular', matricula: 'AMAS-001', dataEntrada: '2023-01-15', email: 'joao@email.com', firstLogin: true },
+                        { id: 3, name: 'Maria Oliveira', cpf: '333.333.333-33', password: 'senha123', role: 'associado', status: 'Inadimplente', matricula: 'AMAS-002', dataEntrada: '2023-05-20', email: 'maria@email.com', firstLogin: false },
+                        { id: 4, name: 'Empresa Parceira S/A', cpf: '222.222.222-22', password: 'empresa123', role: 'empresario', status: 'Ativo' }
+                    ];
+                    localStorage.setItem('amas_users', JSON.stringify(defaultUsers));
+                }
+                if(!localStorage.getItem('amas_contributions')) {
+                    const defaultContribs = [
+                        { id: 1, userId: 2, month: '2026-02', value: 50.00, status: 'Aprovado', message: '' },
+                        { id: 2, userId: 3, month: '2026-01', value: 50.00, status: 'Revisão solicitada', message: 'Comprovante ilegível.' }
+                    ];
+                    localStorage.setItem('amas_contributions', JSON.stringify(defaultContribs));
+                }
+                if(!localStorage.getItem('amas_join_requests')) {
+                    localStorage.setItem('amas_join_requests', JSON.stringify([]));
+                }
+            },
+
+            init: function() {
+                this.seedData();
+                this.checkSession();
+                this.setupTheme();
+            },
+
+            // Navegação Single Page
+            navigate: function(viewId) {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                
+                // Controle de acesso básico
+                if (['admin', 'associado', 'empresario'].includes(viewId)) {
+                    if (!this.currentUser || this.currentUser.role !== viewId) {
+                        this.navigate('home');
+                        return;
+                    }
+                }
+
+                document.getElementById(`view-${viewId}`).classList.add('active');
+                window.scrollTo(0, 0);
+
+                // Disparar lógica específica da view
+                if (viewId === 'admin') this.loadAdminPanel();
+                if (viewId === 'associado') this.loadAssocPanel();
+                
+                // Fechar modals
+                this.closeLoginModal();
+            },
+
+            // --- UI & TEMA ---
+            setupTheme: function() {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            },
+            toggleTheme: function() {
+                document.documentElement.classList.toggle('dark');
+                if (document.documentElement.classList.contains('dark')) {
+                    localStorage.theme = 'dark';
+                } else {
+                    localStorage.theme = 'light';
+                }
+                // Redesenhar gráfico se admin
+                if(this.currentUser && this.currentUser.role === 'admin' && this.chartInstance) {
+                    this.loadAdminPanel();
+                }
+            },
+            showToast: function(msg, type='info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                let icon = type === 'success' ? 'check-circle' : type === 'error' ? 'circle-exclamation' : 'info-circle';
+                toast.innerHTML = `<i class="fa-solid fa-${icon} mr-2"></i> ${msg}`;
+                container.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+            },
+            maskCPF: function(input) {
+                let v = input.value.replace(/\D/g, "");
+                if (v.length > 11) v = v.slice(0, 11);
+                v = v.replace(/(\d{3})(\d)/, "$1.$2");
+                v = v.replace(/(\d{3})(\d)/, "$1.$2");
+                v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                input.value = v;
+            },
+
+            // --- PARTE 1: HOME & LOGIN ---
+            submitJoinRequest: function(e) {
+                e.preventDefault();
+                const cpf = document.getElementById('join-cpf').value;
+                if(cpf.length < 14) {
+                    this.showToast('CPF inválido.', 'error');
+                    return;
+                }
+
+                const users = JSON.parse(localStorage.getItem('amas_users'));
+                if(users.some(u => u.cpf === cpf)) {
+                    this.showToast('Este CPF já está cadastrado no sistema.', 'error');
+                    return;
+                }
+
+                const request = {
+                    nome: document.getElementById('join-nome').value,
+                    cpf: cpf,
+                    data: document.getElementById('join-data').value,
+                    telefone: document.getElementById('join-telefone').value,
+                    email: document.getElementById('join-email').value,
+                    endereco: document.getElementById('join-endereco').value,
+                    profissao: document.getElementById('join-profissao').value,
+                    motivo: document.getElementById('join-motivo').value,
+                    status: 'Pendente'
+                };
+
+                const requests = JSON.parse(localStorage.getItem('amas_join_requests'));
+                requests.push(request);
+                localStorage.setItem('amas_join_requests', JSON.stringify(requests));
+
+                document.getElementById('join-form').reset();
+                this.showToast('Sua solicitação foi enviada com sucesso. A equipe da AMAS analisará seu cadastro.', 'success');
+            },
+            
+            openLoginModal: function() {
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.getElementById('login-user').focus();
+            },
+            closeLoginModal: function() {
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('login-form').reset();
+            },
+            setLoginRole: function(role) {
+                document.getElementById('login-role').value = role;
+                const tabs = ['admin', 'associado', 'empresario'];
+                tabs.forEach(t => {
+                    const el = document.getElementById(`tab-login-${t}`);
+                    if(t === role) {
+                        el.className = 'flex-1 py-2 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-amas-blue-main dark:text-white transition';
+                    } else {
+                        el.className = 'flex-1 py-2 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-amas-blue-main transition';
+                    }
+                });
+                
+                const label = document.getElementById('label-login-user');
+                label.innerText = role === 'admin' ? 'Usuário / Login' : 'CPF';
+                
+                let input = document.getElementById('login-user');
+                input.value = '';
+                if(role !== 'admin') {
+                    input.setAttribute('placeholder', '000.000.000-00');
+                    input.setAttribute('oninput', 'app.maskCPF(this)');
+                    input.setAttribute('maxlength', '14');
+                } else {
+                    input.removeAttribute('placeholder');
+                    input.removeAttribute('oninput');
+                    input.removeAttribute('maxlength');
+                }
+            },
+            doLogin: function(e) {
+                e.preventDefault();
+                const userLogin = document.getElementById('login-user').value;
+                const pass = document.getElementById('login-pass').value;
+                const role = document.getElementById('login-role').value;
+
+                const users = JSON.parse(localStorage.getItem('amas_users'));
+                const user = users.find(u => u.cpf === userLogin && u.password === pass && u.role === role);
+
+                if (user) {
+                    this.currentUser = user;
+                    localStorage.setItem('amas_session', JSON.stringify(user));
+                    this.showToast(`Bem-vindo, ${user.name}!`, 'success');
+                    this.updateNavState();
+                    
+                    if(user.role === 'associado' && user.firstLogin) {
+                        document.getElementById('first-login-modal').classList.remove('hidden');
+                    } else {
+                        this.navigate(user.role);
+                    }
+                } else {
+                    this.showToast('Credenciais inválidas ou perfil incorreto.', 'error');
+                }
+            },
+            logout: function() {
+                this.currentUser = null;
+                localStorage.removeItem('amas_session');
+                this.updateNavState();
+                this.navigate('home');
+                this.showToast('Logout realizado.', 'info');
+            },
+            checkSession: function() {
+                const session = localStorage.getItem('amas_session');
+                if (session) {
+                    this.currentUser = JSON.parse(session);
+                    this.updateNavState();
+                    // Se estiver em modo associado e não mudou senha, forçar
+                    if(this.currentUser.role === 'associado' && this.currentUser.firstLogin) {
+                         document.getElementById('first-login-modal').classList.remove('hidden');
+                    } else {
+                        this.navigate(this.currentUser.role);
+                    }
+                } else {
+                    this.navigate('home');
+                }
+            },
+            updateNavState: function() {
+                const isLogged = this.currentUser !== null;
+                document.getElementById('btn-login-nav').classList.toggle('hidden', isLogged);
+                document.getElementById('btn-logout-nav').classList.toggle('hidden', !isLogged);
+                document.getElementById('btn-login-mobile').classList.toggle('hidden', isLogged);
+                document.getElementById('btn-logout-mobile').classList.toggle('hidden', !isLogged);
+                
+                // Esconder links públicos se logado, ou mostrar atalho pro painel
+                const publicLinks = document.querySelectorAll('.nav-public');
+                publicLinks.forEach(l => l.style.display = isLogged ? 'none' : 'block');
+                
+                // Add painel link
+                let painelLink = document.getElementById('nav-painel-link');
+                if(isLogged) {
+                    if(!painelLink) {
+                        painelLink = document.createElement('a');
+                        painelLink.id = 'nav-painel-link';
+                        painelLink.href = '#';
+                        painelLink.className = 'font-bold text-yellow-300 hover:text-white transition';
+                        painelLink.onclick = () => this.navigate(this.currentUser.role);
+                        document.getElementById('nav-links').insertBefore(painelLink, document.getElementById('btn-logout-nav'));
+                    }
+                    painelLink.innerText = 'Meu Painel';
+                } else if(painelLink) {
+                    painelLink.remove();
+                }
+            },
+
+            // --- PARTE 2: ADMIN ---
+            loadAdminPanel: function() {
+                const users = JSON.parse(localStorage.getItem('amas_users')).filter(u => u.role === 'associado');
+                const contribs = JSON.parse(localStorage.getItem('amas_contributions'));
+                
+                // Stats
+                let regulares = 0; let inadimplentes = 0;
+                users.forEach(u => {
+                    if(u.status === 'Regular') regulares++;
+                    if(u.status === 'Inadimplente') inadimplentes++;
+                });
+                let pendentes = contribs.filter(c => c.status === 'Em análise').length;
+
+                document.getElementById('admin-total-assoc').innerText = users.length;
+                document.getElementById('admin-regulares').innerText = regulares;
+                document.getElementById('admin-inadimplentes').innerText = inadimplentes;
+                document.getElementById('admin-pendentes').innerText = pendentes;
+
+                // Tabela de Usuários
+                this.renderAdminUsersTable(users);
+
+                // Tabela de Aprovações
+                const tableAprovacoes = document.getElementById('table-aprovacoes');
+                tableAprovacoes.innerHTML = '';
+                const emAnalise = contribs.filter(c => c.status === 'Em análise');
+                
+                if(emAnalise.length === 0) {
+                    tableAprovacoes.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma contribuição pendente.</td></tr>`;
+                } else {
+                    emAnalise.forEach(c => {
+                        const user = users.find(u => u.id === c.userId);
+                        if(!user) return;
+                        tableAprovacoes.innerHTML += `
+                            <tr class="border-b dark:border-gray-700 text-sm">
+                                <td class="py-3 text-gray-800 dark:text-gray-200">${user.name}<br><span class="text-xs text-gray-500">${c.month}</span></td>
+                                <td class="py-3 font-bold text-green-600">R$ ${parseFloat(c.value).toFixed(2)}</td>
+                                <td class="py-3"><a href="#" class="text-blue-500 hover:underline"><i class="fa-solid fa-file-pdf"></i> Ver</a></td>
+                                <td class="py-3 flex gap-2">
+                                    <button onclick="app.processarContrib(${c.id}, 'Aprovado')" class="bg-green-500 text-white p-1 rounded hover:bg-green-600" title="Aprovar"><i class="fa-solid fa-check"></i></button>
+                                    <button onclick="app.abrirModalRevisao(${c.id})" class="bg-yellow-500 text-white p-1 rounded hover:bg-yellow-600" title="Pedir Revisão"><i class="fa-solid fa-rotate-left"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // Gráfico Chart.js
+                const ctx = document.getElementById('chartAssociados').getContext('2d');
+                if(this.chartInstance) this.chartInstance.destroy();
+                
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#e5e7eb' : '#374151';
+
+                this.chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Regular', 'Inadimplente', 'Em Análise'],
+                        datasets: [{
+                            data: [regulares, inadimplentes, users.filter(u=>u.status==='Pendente').length],
+                            backgroundColor: ['#10B981', '#EF4444', '#F59E0B'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: textColor } }
+                        }
+                    }
+                });
+            },
+            renderAdminUsersTable: function(users) {
+                const tbody = document.getElementById('table-admin-users');
+                tbody.innerHTML = '';
+                users.forEach(u => {
+                    let badgeClass = u.status === 'Regular' ? 'bg-green-100 text-green-800' : 
+                                     (u.status === 'Inadimplente' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800');
+                    
+                    tbody.innerHTML += `
+                        <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="p-3 font-medium">${u.name}</td>
+                            <td class="p-3 font-mono text-sm">${u.cpf}</td>
+                            <td class="p-3 text-sm">${u.matricula || '-'}</td>
+                            <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${badgeClass}">${u.status}</span></td>
+                            <td class="p-3">
+                                <button onclick="app.deleteUser(${u.id})" class="text-red-500 hover:text-red-700 ml-2" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            },
+            filterAdminUsers: function() {
+                const q = document.getElementById('admin-search-cpf').value;
+                const users = JSON.parse(localStorage.getItem('amas_users')).filter(u => u.role === 'associado');
+                const filtered = q ? users.filter(u => u.cpf.includes(q)) : users;
+                this.renderAdminUsersTable(filtered);
+            },
+            deleteUser: function(id) {
+                if(confirm('Tem certeza que deseja excluir este associado?')) {
+                    let users = JSON.parse(localStorage.getItem('amas_users'));
+                    users = users.filter(u => u.id !== id);
+                    localStorage.setItem('amas_users', JSON.stringify(users));
+                    this.showToast('Usuário excluído.', 'success');
+                    this.loadAdminPanel();
+                }
+            },
+            processarContrib: function(id, status, message = '') {
+                let contribs = JSON.parse(localStorage.getItem('amas_contributions'));
+                let contrib = contribs.find(c => c.id === id);
+                if(contrib) {
+                    contrib.status = status;
+                    contrib.message = message;
+                    localStorage.setItem('amas_contributions', JSON.stringify(contribs));
+                    
+                    // Atualizar status do usuario se aprovou
+                    if(status === 'Aprovado') {
+                        let users = JSON.parse(localStorage.getItem('amas_users'));
+                        let user = users.find(u => u.id === contrib.userId);
+                        if(user) {
+                            user.status = 'Regular';
+                            localStorage.setItem('amas_users', JSON.stringify(users));
+                        }
+                    }
+
+                    this.showToast(`Contribuição ${status}.`, 'success');
+                    this.loadAdminPanel();
+                }
+            },
+            abrirModalRevisao: function(id) {
+                document.getElementById('rev-contrib-id').value = id;
+                document.getElementById('rev-mensagem').value = '';
+                document.getElementById('modal-revisao').classList.remove('hidden');
+            },
+            confirmRevisao: function() {
+                const id = parseInt(document.getElementById('rev-contrib-id').value);
+                const msg = document.getElementById('rev-mensagem').value;
+                if(!msg) {
+                    this.showToast('Digite a mensagem de revisão.', 'error');
+                    return;
+                }
+                this.processarContrib(id, 'Revisão solicitada', msg);
+                document.getElementById('modal-revisao').classList.add('hidden');
+            },
+
+            // --- PARTE 3: ASSOCIADO ---
+            changeFirstPassword: function(e) {
+                e.preventDefault();
+                const p1 = document.getElementById('new-pass-1').value;
+                const p2 = document.getElementById('new-pass-2').value;
+                
+                if(p1 !== p2) {
+                    this.showToast('As senhas não coincidem.', 'error');
+                    return;
+                }
+
+                let users = JSON.parse(localStorage.getItem('amas_users'));
+                let uIndex = users.findIndex(u => u.id === this.currentUser.id);
+                
+                if(uIndex !== -1) {
+                    users[uIndex].password = p1;
+                    users[uIndex].firstLogin = false;
+                    this.currentUser = users[uIndex];
+                    localStorage.setItem('amas_users', JSON.stringify(users));
+                    localStorage.setItem('amas_session', JSON.stringify(this.currentUser));
+                    
+                    document.getElementById('first-login-modal').classList.add('hidden');
+                    this.showToast('Senha atualizada com sucesso!', 'success');
+                    this.navigate('associado');
+                }
+            },
+            loadAssocPanel: function() {
+                const u = this.currentUser;
+                // Obter dados frescos do banco
+                const users = JSON.parse(localStorage.getItem('amas_users'));
+                const freshUser = users.find(x => x.id === u.id);
+
+                document.getElementById('assoc-nome-display').innerText = freshUser.name;
+                document.getElementById('assoc-perfil-nome').innerText = freshUser.name;
+                document.getElementById('assoc-perfil-mat').innerText = freshUser.matricula;
+                document.getElementById('assoc-perfil-cpf').innerText = freshUser.cpf;
+                document.getElementById('assoc-perfil-email').innerText = freshUser.email;
+                document.getElementById('assoc-perfil-data').innerText = freshUser.dataEntrada;
+                
+                const badge = document.getElementById('assoc-status-badge');
+                badge.innerText = `Status: ${freshUser.status}`;
+                badge.className = `px-4 py-2 rounded-full font-bold text-white shadow-md ${freshUser.status === 'Regular' ? 'bg-green-500' : 'bg-red-500'}`;
+
+                // Histórico
+                const contribs = JSON.parse(localStorage.getItem('amas_contributions'))
+                                    .filter(c => c.userId === freshUser.id)
+                                    .sort((a,b) => b.id - a.id); // mais recentes primeiro
+
+                const tbody = document.getElementById('table-assoc-history');
+                tbody.innerHTML = '';
+                
+                if(contribs.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma contribuição registrada.</td></tr>`;
+                } else {
+                    contribs.forEach(c => {
+                        let statusColor = c.status === 'Aprovado' ? 'text-green-500' : (c.status === 'Em análise' ? 'text-yellow-500' : 'text-red-500');
+                        tbody.innerHTML += `
+                            <tr class="border-b dark:border-gray-700">
+                                <td class="p-3 font-medium">${c.month}</td>
+                                <td class="p-3">R$ ${parseFloat(c.value).toFixed(2)}</td>
+                                <td class="p-3 font-bold ${statusColor}">${c.status}</td>
+                                <td class="p-3 text-sm text-gray-600 dark:text-gray-400 italic">${c.message || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            },
+            submitContribution: function(e) {
+                e.preventDefault();
+                const mes = document.getElementById('contrib-mes').value;
+                const valor = document.getElementById('contrib-valor').value;
+                // Simulação de upload de arquivo no frontend
+                
+                let contribs = JSON.parse(localStorage.getItem('amas_contributions'));
+                // checar se já mandou esse mes
+                if(contribs.some(c => c.userId === this.currentUser.id && c.month === mes)) {
+                    this.showToast('Você já enviou comprovante para este mês.', 'error');
+                    return;
+                }
+
+                contribs.push({
+                    id: Date.now(),
+                    userId: this.currentUser.id,
+                    month: mes,
+                    value: parseFloat(valor),
+                    status: 'Em análise',
+                    message: ''
+                });
+
+                localStorage.setItem('amas_contributions', JSON.stringify(contribs));
+                
+                // Mudar status do usuario temporariamente se for inadimplente? Não, regra diz admin quem muda na aprovação.
+                
+                document.getElementById('contrib-form').reset();
+                this.showToast('Comprovante enviado com sucesso! Aguarde análise.', 'success');
+                this.loadAssocPanel();
+            },
+
+            // --- PARTE 4: EMPRESÁRIO ---
+            consultarAssociado: function() {
+                const cpf = document.getElementById('emp-search-cpf').value;
+                if(cpf.length < 14) {
+                    this.showToast('CPF incompleto.', 'error');
+                    return;
+                }
+
+                const users = JSON.parse(localStorage.getItem('amas_users'));
+                const assoc = users.find(u => u.cpf === cpf && u.role === 'associado');
+                
+                const resDiv = document.getElementById('emp-resultado');
+                
+                if(!assoc) {
+                    this.showToast('Associado não encontrado.', 'error');
+                    resDiv.classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('emp-res-nome').innerText = assoc.name;
+                document.getElementById('emp-res-cpf').innerText = assoc.cpf;
+                document.getElementById('emp-res-status').innerText = assoc.status;
+                
+                const dt = new Date();
+                document.getElementById('emp-res-data').innerText = `${dt.toLocaleDateString('pt-BR')} às ${dt.toLocaleTimeString('pt-BR')}`;
+
+                const icon = document.getElementById('emp-icon');
+                const liberado = document.getElementById('emp-res-liberado');
+
+                if(assoc.status === 'Regular') {
+                    resDiv.className = 'mt-8 p-6 rounded-xl border-2 transition-all duration-300 border-green-500 bg-green-50 dark:bg-gray-800 block';
+                    icon.className = 'text-5xl mr-4 text-green-500 fa-solid fa-circle-check';
+                    document.getElementById('emp-res-status').className = 'text-xl font-bold text-green-600';
+                    liberado.innerText = 'SIM';
+                    liberado.className = 'text-xl font-bold text-green-600';
+                } else {
+                    resDiv.className = 'mt-8 p-6 rounded-xl border-2 transition-all duration-300 border-red-500 bg-red-50 dark:bg-gray-800 block';
+                    icon.className = 'text-5xl mr-4 text-red-500 fa-solid fa-circle-xmark';
+                    document.getElementById('emp-res-status').className = 'text-xl font-bold text-red-600';
+                    liberado.innerText = 'NÃO';
+                    liberado.className = 'text-xl font-bold text-red-600';
+                }
+            }
+        };
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>
